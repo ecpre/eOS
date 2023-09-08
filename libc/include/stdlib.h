@@ -3,7 +3,7 @@
 
 #include <sys/cdefs.h>
 
-__atribute__((__noreturn__))
+__attribute__((__noreturn__))
 void abort(void);
 
 #endif
