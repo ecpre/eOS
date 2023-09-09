@@ -32,7 +32,7 @@ void terminal_set_color(uint8_t color) {
 }
 
 void terminal_color_reset() {
-	terminal_color = vga_entry_color(VGA_COLOR_LIGHT_GREY, VGA_COLOR, BLACK);
+	terminal_color = vga_entry_color(VGA_COLOR_LIGHT_GREY, VGA_COLOR_BLACK);
 }
 
 void terminal_put_entry(char c, uint8_t color, size_t x, size_t y) {
