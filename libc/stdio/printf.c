@@ -132,39 +132,39 @@ int printf(const char* format, ...) {
 			break;
 		case FIN_S:
 			switch(*format) {
-				case 'c':	char c = (char) va_arg(args, int);
-						putchar(c);
-						format++;
-						written++;
-						break;
-				case 's':	const char* str = va_arg(args, char*);
-						size_t len = strlen(str);
-						print(str, len);
-						format++;
-						written+=len;
-						break;
-				case 'i':
-				case 'd':	written += num_write(true, 10, length, &args);
-						format++;
-						break;
-				case 'u':	written += num_write(false, 10, length, &args);
-						format++;
-						break;
-				case 'x':
-				case 'p':	print("0x", 2);
-						written += (2 + num_write(false, 16, length, &args));
-						format++;
-						break;
-				case 'o':	print("0o", 2);
-						written += (2 + num_write(false, 8, length, &args));
-						format++;
-						break;
-				case '%':	putchar('%');
-						written++;
-						format++;
-						break;
-						// double break so i don't forget when adding new format specs
-				default:	break;
+			case 'c':	char c = (char) va_arg(args, int);
+					putchar(c);
+					format++;
+					written++;
+					break;
+			case 's':	const char* str = va_arg(args, char*);
+					size_t len = strlen(str);
+					print(str, len);
+					format++;
+					written+=len;
+					break;
+			case 'i':
+			case 'd':	written += num_write(true, 10, length, &args);
+					format++;
+					break;
+			case 'u':	written += num_write(false, 10, length, &args);
+					format++;
+					break;
+			case 'x':
+			case 'p':	print("0x", 2);
+					written += (2 + num_write(false, 16, length, &args));
+					format++;
+					break;
+			case 'o':	print("0o", 2);
+					written += (2 + num_write(false, 8, length, &args));
+					format++;
+					break;
+			case '%':	putchar('%');
+					written++;
+					format++;
+					break;
+					// double break so i don't forget when adding new format specs
+			default:	break;
 
 			}
 			state = INIT_S;
