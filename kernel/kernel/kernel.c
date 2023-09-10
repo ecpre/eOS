@@ -1,6 +1,6 @@
 #include <stdio.h>
 #include <kernel/tty.h>
-#include <stdint.h>
+#include "multiboot.h"
 
 void kernel_main(int a) {
 	terminal_init();
@@ -11,5 +11,4 @@ void kernel_main(int a) {
 	printf("str: %s\n", "this is a string!");
 	printf("int: %d unsigned int: %u, unsigned underflow: %u\n", -5, 5, -5);
 	printf("pointer: %p hex: %x\n", &a, 0xdeadbeef);
-	printf("%llu\n", (uint64_t) 1000000000000);
 }

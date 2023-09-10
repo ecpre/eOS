@@ -96,7 +96,6 @@ _start:
 	#enter kernel
 	call _init
 
-	addl $0xC0000000, %ebx	
 	pushl %ebx
 	
 	call kernel_main
