@@ -40,8 +40,8 @@ _start:
 	movl $1023, %ecx
 	
 1:	
-	cmpl $_kernel_start, %esi
-	jl 2f
+	//cmpl $_kernel_start, %esi
+	//jl 2f
 	cmpl $(_kernel_end-0xC0000000), %esi
 	jge 3f
 	#map addresseses as writable
@@ -67,10 +67,6 @@ _start:
 	movl $(boot_page_directory - 0xC0000000), %ecx
 	movl %ecx, %cr3
 	
-//	cli
-//5:	hlt
-//	jmp 5b	
-
 	#enable paging and write protection
 	movl %cr0, %ecx
 	orl $0x80010000, %ecx
@@ -94,9 +90,15 @@ _start:
 	#setup stack
 	mov $stack_top, %esp
 	#enter kernel
-	call _init
-
+	pushl %eax
 	pushl %ebx
+	call _init
+	
+	popl %ebx
+	add $0xC0000000, %ebx
+	popl %eax
+	pushl %eax
+	pushl %ebx	
 	
 	call kernel_main
 

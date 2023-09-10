@@ -39,6 +39,11 @@ void terminal_put_entry(char c, uint8_t color, size_t x, size_t y) {
 	size_t index = y * VGA_WIDTH + x;
 	unsigned char uc = (unsigned char) c;
 	if (uc == '\n') {
+		for(size_t x = terminal_x; x < VGA_WIDTH; x++) {
+			// makes coloring nicer. in my own opinion at least
+			size_t index = (y*VGA_WIDTH)+x;
+			terminal_buf[index] = vga_entry(' ', terminal_color);
+		}
 		terminal_y++;
 		// i am not sure why this needs to be -1. 
 		terminal_x = -1;

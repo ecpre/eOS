@@ -123,7 +123,7 @@ int printf(const char* format, ...) {
 			break;
 		case LONG_S:
 			switch(*format) {
-			case 'l':	length = SHORT_SHORT_L;
+			case 'l':	length = LONG_LONG_L;
 					format++;
 					__attribute__((fallthrough));
 			default:	state = FIN_S;

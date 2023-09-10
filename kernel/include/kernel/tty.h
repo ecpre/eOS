@@ -7,5 +7,6 @@
 void terminal_init();
 void terminal_set_color(uint8_t);
 void terminal_putc(char);
+void terminal_color_reset();
 
 #endif
