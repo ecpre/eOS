@@ -29,7 +29,7 @@ void kernel_main(uint32_t multiboot_loc, uint32_t grub_magic) {
 
 void multiboot(multiboot_info_t* mbd, uint32_t grub_magic) {
 	terminal_set_color(vga_entry_color(VGA_COLOR_WHITE, VGA_COLOR_RED));
-	printf("MULTIBOOT RAM INFORTMATION\n");
+	printf("MULTIBOOT RAM INFORMATION\n");
 	printf("%x\n", mbd);
 	if (grub_magic != 0x2BADB002) {
 		printf("BAD MAGIC NUM!\n");
@@ -76,7 +76,7 @@ void multiboot(multiboot_info_t* mbd, uint32_t grub_magic) {
 		}
 	}
 	printf("total mem: %llxKiB\n", mem_size/1024);
-	printf("available: %llxKiB\n", mem_size/1024);
+	printf("available: %llxKiB\n", available/1024);
 
 	terminal_color_reset();
 }
