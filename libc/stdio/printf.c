@@ -36,7 +36,7 @@ int intprint(bool sign, uint64_t num, int base) {
 		int64_t* nnum = (int64_t*) &num;
 		if (*nnum<0) {
 			putchar('-');
-			return 1 + intprint(false, num, base);
+			return 1 + intprint(false, -(*nnum), base);
 		}
 	}
 	char buf[32];
