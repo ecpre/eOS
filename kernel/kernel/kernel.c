@@ -3,11 +3,15 @@
 #include <kernel/vga.h>
 #include <stdlib.h>
 #include <stdint.h>
+#include <lib/bitmap.h>
+
 #include "multiboot.h"
+
 #define KERNEL_VIRTUAL_LOC 0xC0000000
 
 extern uint32_t _kernel_start;
 extern uint32_t _kernel_end;
+extern uint32_t boot_page_directory;
 
 void multiboot(multiboot_info_t*, uint32_t grub_magic);
 
@@ -25,6 +29,18 @@ void kernel_main(uint32_t multiboot_loc, uint32_t grub_magic) {
 	multiboot(mbd, grub_magic);
 	printf("%p\n", &_kernel_start);
 	printf("%p\n", &_kernel_end);
+	uint32_t boot_page_directory;
+	asm volatile("movl %%cr3, %0" : "=r"(boot_page_directory):);
+	printf("%p\n", boot_page_directory);
+
+	bitmap bmap;
+	bmap.size = 0xffe;
+	int bsize = (bmap.size-1)/8+1;
+	uint8_t bbytes[bsize];
+	bmap.bytes = bbytes;
+	set_bitmap(&bmap, 1, 1);
+	printf("%d\n", get_bitmap(&bmap, 1));
+
 }
 
 void multiboot(multiboot_info_t* mbd, uint32_t grub_magic) {
@@ -75,8 +91,9 @@ void multiboot(multiboot_info_t* mbd, uint32_t grub_magic) {
 
 		}
 	}
-	printf("total mem: %llxKiB\n", mem_size/1024);
-	printf("available: %llxKiB\n", available/1024);
+	printf("total mem: %llx KiB\n", mem_size/1024);
+	printf("available: %llx KiB\n", available/1024);
+	printf("necessary bitmap size: %x bytes\n", (mem_size >> 15));
 
 	terminal_color_reset();
 }
