@@ -29,6 +29,13 @@ SECTIONS {
 		*(.bss)
 		*(.bootstrap_stack)
 	}
+	
+	_mmap_start = ALIGN(4096);
+		
+	_mmap_end = _mmap_start + 0x00100000;
+
+	. = _mmap_end;
+
 
 	_kernel_end = .;
 

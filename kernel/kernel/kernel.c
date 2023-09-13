@@ -4,6 +4,7 @@
 #include <stdlib.h>
 #include <stdint.h>
 #include <lib/bitmap.h>
+#include <kernel/page.h>
 
 #include "multiboot.h"
 
@@ -11,7 +12,8 @@
 
 extern uint32_t _kernel_start;
 extern uint32_t _kernel_end;
-extern uint32_t boot_page_directory;
+extern uint32_t _mmap_start;
+extern uint32_t _mmap_end;
 
 void multiboot(multiboot_info_t*, uint32_t grub_magic);
 
@@ -27,20 +29,17 @@ void kernel_main(uint32_t multiboot_loc, uint32_t grub_magic) {
 	multiboot_info_t* mbd = (multiboot_info_t*) multiboot_loc;
 	printf("%p\n", mbd);
 	multiboot(mbd, grub_magic);
-	printf("%p\n", &_kernel_start);
-	printf("%p\n", &_kernel_end);
-	uint32_t boot_page_directory;
-	asm volatile("movl %%cr3, %0" : "=r"(boot_page_directory):);
-	printf("%p\n", boot_page_directory);
-
+	
+	printf("creating bitmap at loc: %p\n", &_mmap_start);
 	bitmap bmap;
-	bmap.size = 0xffe;
-	int bsize = (bmap.size-1)/8+1;
-	uint8_t bbytes[bsize];
+	bmap.size = 0xffe*8;
+	uint8_t* bbytes = (void*) &_mmap_start;
 	bmap.bytes = bbytes;
 	set_bitmap(&bmap, 1, 1);
-	printf("%d\n", get_bitmap(&bmap, 1));
-
+	
+	page_directory_t* default_pd;
+	asm volatile("movl %%cr3, %0" : "=r"(default_pd):);
+	printf("%x", default_pd);
 }
 
 void multiboot(multiboot_info_t* mbd, uint32_t grub_magic) {
