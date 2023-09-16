@@ -25,9 +25,7 @@ void kernel_main(uint32_t multiboot_loc, uint32_t grub_magic) {
 	printf("str: %s\n", "this is a string!");
 	printf("int: %d unsigned int: %u, unsigned underflow: %u\n", -5, 5, -5);
 	printf("pointer: %p hex: %x\n", multiboot_loc, 0xdeadbeef);
-	printf("%p\n", multiboot_loc);
 	multiboot_info_t* mbd = (multiboot_info_t*) multiboot_loc;
-	printf("%p\n", mbd);
 	multiboot(mbd, grub_magic);
 	
 	printf("creating bitmap at loc: %p\n", &_mmap_start);
@@ -39,7 +37,18 @@ void kernel_main(uint32_t multiboot_loc, uint32_t grub_magic) {
 	
 	page_directory_t* default_pd;
 	asm volatile("movl %%cr3, %0" : "=r"(default_pd):);
-	printf("%x", default_pd);
+	default_pd = (void*) default_pd + KERNEL_VIRTUAL_LOC;
+	printf("%x\n", default_pd);
+	printf("%x\n", (default_pd->tables[768].addr));
+	printf("%x\n", &_mmap_end);
+	uint32_t newpd_loc = (uint32_t) &_mmap_end;
+	newpd_loc -= KERNEL_VIRTUAL_LOC;
+	paging_reinit(default_pd, newpd_loc);
+	page_directory_t* new_pd;
+	asm volatile("movl %%cr3, %0" : "=r"(new_pd):);
+	printf("Recursive paging pd: %x\n", new_pd);
+	new_pd = (page_directory_t*) 0xfffff000;
+	printf("%x\n", new_pd->tables[769].addr);
 }
 
 void multiboot(multiboot_info_t* mbd, uint32_t grub_magic) {

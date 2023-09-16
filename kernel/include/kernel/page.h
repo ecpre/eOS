@@ -33,5 +33,9 @@ typedef struct page_directory {
 } page_directory_t;
 
 typedef struct page_table {
-	page_directory_entry_t pages[1024];
+	page_table_entry_t pages[1024];
 } page_table_t;
+
+void swap_page_directory(page_directory_t*);
+
+void paging_reinit(page_directory_t*, uint32_t);

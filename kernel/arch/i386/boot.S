@@ -37,7 +37,7 @@ _start:
 	#map addr 0
 	movl $0, %esi
 	#map 1023 pages, 1024 is vga text
-	movl $1023, %ecx
+	//movl $1023, %ecx
 	
 1:	
 	//cmpl $_kernel_start, %esi
