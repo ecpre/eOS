@@ -39,3 +39,5 @@ typedef struct page_table {
 void swap_page_directory(page_directory_t*);
 
 void paging_reinit(page_directory_t*, uint32_t);
+
+void* get_physical_addr(void*);

@@ -55,3 +55,21 @@ void paging_reinit(page_directory_t* boot_page_dir, uint32_t creation_loc) {
 
 }
 
+// can use the fact that the page directory is always at 0xFFFFF000
+void* get_physical_addr(void* virtual_addr) {
+
+	uint32_t pd_index = (uint32_t) virtual_addr >> 22;
+	uint32_t pt_index = (uint32_t) virtual_addr >> 12 & 0x03FF;
+
+	page_directory_t* pd = (page_directory_t*) 0xFFFFF000;
+	// return a null pointer if nothing there I guess. for now
+	if (pd->tables[pd_index].present == 0) return (void*) 0;
+
+	page_table_t* pt = (page_table_t*) 0xFFC00000 + pd_index;
+
+	uint32_t page_addr = pt->pages[pt_index].addr << 12;
+	
+	// page table addr + the last bits of the original virt addr
+	return (void*)(page_addr + ((uint32_t) virtual_addr & 0xFFF));
+
+}

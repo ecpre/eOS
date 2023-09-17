@@ -12,8 +12,7 @@
 
 extern uint32_t _kernel_start;
 extern uint32_t _kernel_end;
-extern uint32_t _mmap_start;
-extern uint32_t _mmap_end;
+extern uint32_t _second_page;
 
 void multiboot(multiboot_info_t*, uint32_t grub_magic);
 
@@ -28,20 +27,13 @@ void kernel_main(uint32_t multiboot_loc, uint32_t grub_magic) {
 	multiboot_info_t* mbd = (multiboot_info_t*) multiboot_loc;
 	multiboot(mbd, grub_magic);
 	
-	printf("creating bitmap at loc: %p\n", &_mmap_start);
-	bitmap bmap;
-	bmap.size = 0xffe*8;
-	uint8_t* bbytes = (void*) &_mmap_start;
-	bmap.bytes = bbytes;
-	set_bitmap(&bmap, 1, 1);
-	
 	page_directory_t* default_pd;
 	asm volatile("movl %%cr3, %0" : "=r"(default_pd):);
 	default_pd = (void*) default_pd + KERNEL_VIRTUAL_LOC;
 	printf("%x\n", default_pd);
 	printf("%x\n", (default_pd->tables[768].addr));
-	printf("%x\n", &_mmap_end);
-	uint32_t newpd_loc = (uint32_t) &_mmap_end;
+	printf("%x\n", &_second_page);
+	uint32_t newpd_loc = (uint32_t) &_second_page;
 	newpd_loc -= KERNEL_VIRTUAL_LOC;
 	paging_reinit(default_pd, newpd_loc);
 	page_directory_t* new_pd;
@@ -49,6 +41,10 @@ void kernel_main(uint32_t multiboot_loc, uint32_t grub_magic) {
 	printf("Recursive paging pd: %x\n", new_pd);
 	new_pd = (page_directory_t*) 0xfffff000;
 	printf("%x\n", new_pd->tables[769].addr);
+	
+	page_table_t* test_pte = (page_table_t*) 0xFFF00000;
+	printf("%x\n", test_pte->pages[10].addr);
+	printf("test phys addr: %x\n", get_physical_addr(&_second_page));
 }
 
 void multiboot(multiboot_info_t* mbd, uint32_t grub_magic) {
