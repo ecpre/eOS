@@ -66,6 +66,7 @@ void* get_physical_addr(void* virtual_addr) {
 	if (pd->tables[pd_index].present == 0) return (void*) 0;
 
 	page_table_t* pt = (page_table_t*) 0xFFC00000 + pd_index;
+	if (pt->pages[pt_index].present == 0) return (void*) 0;
 
 	uint32_t page_addr = pt->pages[pt_index].addr << 12;
 	

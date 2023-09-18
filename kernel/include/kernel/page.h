@@ -1,3 +1,6 @@
+#ifndef _KERNEL_PAGE_H
+#define _KERNEL_TTY_H
+
 #include <stdint.h>
 
 typedef struct page_directory_entry {
@@ -41,3 +44,5 @@ void swap_page_directory(page_directory_t*);
 void paging_reinit(page_directory_t*, uint32_t);
 
 void* get_physical_addr(void*);
+
+#endif
