@@ -2,6 +2,7 @@
 #include <lib/bitmap.h>
 #include <string.h>
 #include <stdint.h>
+#include <stdlib.h>
 
 void swap_page_directory(page_directory_t* page_dir) {
 	uint32_t raw_page_dir = (uint32_t) page_dir;
@@ -35,14 +36,12 @@ void paging_reinit(page_directory_t* boot_page_dir, uint32_t creation_loc) {
 		new_pt->pages[i] = new_page;
 		new_page.addr++;
 	}
-	
 	// hardcoded reservation for this. maybe i should work on the
 	// page bitmap before doing things like this but it's fine
 	page_directory_t* new_pd = (page_directory_t*) 0xC0400000;
 	
 	new_pd->tables[768] = boot_page_dir->tables[768];
 	new_pd_entry.addr = 0x400;
-	new_pd->tables[769] = new_pd_entry;
 	new_pd->tables[1023] = new_pd_entry;
 
 	// this arithmetic could be rendered unnecessary by just splitting the
@@ -52,7 +51,7 @@ void paging_reinit(page_directory_t* boot_page_dir, uint32_t creation_loc) {
 
 	swap_page_directory(new_pd_physical);
 
-
+	page_frame_map_init();
 }
 
 // can use the fact that the page directory is always at 0xFFFFF000
@@ -73,4 +72,44 @@ void* get_physical_addr(void* virtual_addr) {
 	// page table addr + the last bits of the original virt addr
 	return (void*)(page_addr + ((uint32_t) virtual_addr & 0xFFF));
 
+}
+
+// creates two bitmaps. both of 128KB size for simplicty. one for page frames and
+// one for pages. returns a pointer to the frame bitmap. add 128k to get pages
+// NOTE: void* physical_memory will be a pointer to something like
+// memory_map_t* physical_memory once I get this working! don't forget that!
+bitmap* page_frame_map_init(void* physical_memory) {
+	page_directory_t* pd = (page_directory_t*) 0xFFFFF000;
+	page_table_t* bitmap_pt = (page_table_t*) 0xFFC00000 + 769;
+	// something has gone wrong if this page table exists before this is called
+	if (pd->tables[769].present == 1) abort();
+	pd->tables[769].present = 1;
+	pd->tables[769].rw = 1;
+	pd->tables[769].addr = 0x701;
+
+	for (int i = 0; i < 1024; i++) {
+		bitmap_pt->pages[i].present = 1;
+		bitmap_pt->pages[i].rw = 1;
+		bitmap_pt->pages[i].addr = 0x800+i;
+	}
+	// marking frame bitmap as used will be a little more complicated
+	// TODO: do this tomorrow or whenever I get back to this!	
+	bitmap* frame_bitmap = (bitmap*) 0xC0400000;
+	memset(frame_bitmap, 0, 0x20000);
+	
+	bitmap* page_bitmap = (bitmap*) 0xC0420000;
+	memset(page_bitmap, 0, 0x20000);
+	printf("tb769: %x\n", get_physical_addr(bitmap_pt));;
+	// all of first page and first 64 pages in second page are used
+	for(int i = 0; i < 1088; i++) {
+		//frame_bitmap->bytes[i] = 1;
+		//set_bitmap(frame_bitmap, 1, 1);
+		//set_bitmap(frame_bitmap, i, 1);
+	}
+	// mark page directory as used
+	for(int i = 0; i < 1024; i++) {
+		//set_bitmap(page_bitmap, 0xFFC00+i, 1);
+	}
+	
+	return frame_bitmap;
 }

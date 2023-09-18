@@ -7,7 +7,9 @@
 #define FREE 0
 
 typedef struct bitmap {
-	uint32_t size;
+	// just make the program keep track of the bitmap size on their own?
+	// i'll make it like that for now and reevaluate in the future
+	//uint32_t size;
 	uint8_t* bytes;
 } bitmap;
 

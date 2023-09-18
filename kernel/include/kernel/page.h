@@ -2,6 +2,7 @@
 #define _KERNEL_TTY_H
 
 #include <stdint.h>
+#include <lib/bitmap.h>
 
 typedef struct page_directory_entry {
 	uint32_t present	: 1;
@@ -44,5 +45,7 @@ void swap_page_directory(page_directory_t*);
 void paging_reinit(page_directory_t*, uint32_t);
 
 void* get_physical_addr(void*);
+
+bitmap* page_frame_map_init();
 
 #endif
