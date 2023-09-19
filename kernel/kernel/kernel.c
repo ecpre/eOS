@@ -40,7 +40,7 @@ void kernel_main(uint32_t multiboot_loc, uint32_t grub_magic) {
 	asm volatile("movl %%cr3, %0" : "=r"(new_pd):);
 	printf("Recursive paging pd: %x\n", new_pd);
 	new_pd = (page_directory_t*) 0xfffff000;
-	printf("%x\n", new_pd->tables[769].addr);
+	printf("%x\n", new_pd->tables[768].addr);
 	
 	page_table_t* test_pte = (page_table_t*) 0xFFF00000;
 	printf("%x\n", test_pte->pages[10].addr);
