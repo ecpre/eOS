@@ -5,6 +5,8 @@
 #include <stdint.h>
 #include <lib/bitmap.h>
 #include <kernel/page.h>
+#include <kernel/memory.h>
+#include <string.h>
 
 #include "multiboot.h"
 
@@ -13,8 +15,9 @@
 extern uint32_t _kernel_start;
 extern uint32_t _kernel_end;
 extern uint32_t _second_page;
+extern frame_map_t _mmap_start;
 
-void multiboot(multiboot_info_t*, uint32_t grub_magic);
+void multiboot(multiboot_info_t*, uint32_t, frame_map_t*);
 
 void kernel_main(uint32_t multiboot_loc, uint32_t grub_magic) {
 	terminal_init();
@@ -25,14 +28,10 @@ void kernel_main(uint32_t multiboot_loc, uint32_t grub_magic) {
 	printf("int: %d unsigned int: %u, unsigned underflow: %u\n", -5, 5, -5);
 	printf("pointer: %p hex: %x\n", multiboot_loc, 0xdeadbeef);
 	multiboot_info_t* mbd = (multiboot_info_t*) multiboot_loc;
-	multiboot(mbd, grub_magic);
 	
 	page_directory_t* default_pd;
 	asm volatile("movl %%cr3, %0" : "=r"(default_pd):);
 	default_pd = (void*) default_pd + KERNEL_VIRTUAL_LOC;
-	printf("%x\n", default_pd);
-	printf("%x\n", (default_pd->tables[768].addr));
-	printf("%x\n", &_second_page);
 	uint32_t newpd_loc = (uint32_t) &_second_page;
 	newpd_loc -= KERNEL_VIRTUAL_LOC;
 	paging_reinit(default_pd, newpd_loc);
@@ -45,9 +44,22 @@ void kernel_main(uint32_t multiboot_loc, uint32_t grub_magic) {
 	page_table_t* test_pte = (page_table_t*) 0xFFF00000;
 	printf("%x\n", test_pte->pages[10].addr);
 	printf("test phys addr: %x\n", get_physical_addr(&_second_page));
+	
+	// there is size for 256 (at least with current size) entries in this 
+	// map which is only used during the initialization of the page frame
+	// allocator. should be fine, if not quite overkill.
+	frame_map_t* frame_map = &_mmap_start;
+	memset(frame_map, 0, 0x1000);
+	
+	multiboot(mbd, grub_magic, frame_map);
+
+	bitmap* frame_bitmap = page_frame_map_init(frame_map);
+	bitmap* page_bitmap = (void*) frame_bitmap + 0x20004;
+	printf("%d\n", get_bitmap(frame_bitmap, 0x100000));
+
 }
 
-void multiboot(multiboot_info_t* mbd, uint32_t grub_magic) {
+void multiboot(multiboot_info_t* mbd, uint32_t grub_magic, frame_map_t* frame_map) {
 	terminal_set_color(vga_entry_color(VGA_COLOR_WHITE, VGA_COLOR_RED));
 	printf("MULTIBOOT RAM INFORMATION\n");
 	printf("%x\n", mbd);
@@ -66,8 +78,8 @@ void multiboot(multiboot_info_t* mbd, uint32_t grub_magic) {
 	for (uint32_t i = 0; i<mbd->mmap_length; i+=sizeof(multiboot_memory_map_t)) {
 		multiboot_memory_map_t* mmmt = (multiboot_memory_map_t*)
 			(mbd->mmap_addr + i + KERNEL_VIRTUAL_LOC);
-		printf("MAP INDEX: %d | START: %llx | LEN: %llx | TYPE: ",
-				i, mmmt->addr, mmmt->len);
+		printf("MAP INDEX: %d | START: %llx | END: %llx | TYPE: ",
+				i, mmmt->addr, mmmt->addr+mmmt->len);
 
 		mem_size += mmmt->len;
 
@@ -94,7 +106,17 @@ void multiboot(multiboot_info_t* mbd, uint32_t grub_magic) {
 			break;
 
 		}
+		
+		frame_map->start_frame = (uint32_t) mmmt->addr >> 12;
+		frame_map->length = (uint32_t) (mmmt->len-1) / 0x1000 + 1;
+		// free
+		if (mmmt->type == MULTIBOOT_MEMORY_AVAILABLE) frame_map->free = 0;
+		// not free
+		else frame_map->free = 1;
+		frame_map->next = frame_map+1;
+		frame_map++;
 	}
+	frame_map->next = NULL;
 	printf("total mem: %llx KiB\n", mem_size/1024);
 	printf("available: %llx KiB\n", available/1024);
 	printf("necessary bitmap size: %x bytes\n", (mem_size >> 15));

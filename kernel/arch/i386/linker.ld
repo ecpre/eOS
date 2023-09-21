@@ -36,6 +36,12 @@ SECTIONS {
 
 	. = _second_page + 0x1000;
 
+	/* should be enough for mmap */
+
+	_mmap_start = .;
+
+	. = _mmap_start + 0x1000;
+
 	_kernel_end = .;
 
 }

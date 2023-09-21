@@ -3,6 +3,7 @@
 #include <string.h>
 #include <stdint.h>
 #include <stdlib.h>
+#include <kernel/memory.h>
 
 void swap_page_directory(page_directory_t* page_dir) {
 	uint32_t raw_page_dir = (uint32_t) page_dir;
@@ -56,8 +57,6 @@ void paging_reinit(page_directory_t* boot_page_dir, uint32_t creation_loc) {
 	new_pd_physical -= 0xC0000000;
 
 	swap_page_directory(new_pd_physical);
-
-	page_frame_map_init();
 }
 
 // can use the fact that the page directory is always at 0xFFFFF000
@@ -84,7 +83,7 @@ void* get_physical_addr(void* virtual_addr) {
 // one for pages. returns a pointer to the frame bitmap. add 128k+4 to get pages
 // NOTE: void* physical_memory will be a pointer to something like
 // memory_map_t* physical_memory once I get this working! don't forget that!
-bitmap* page_frame_map_init(void* physical_memory) {
+bitmap* page_frame_map_init(frame_map_t* physical_memory) {
 	page_directory_t* pd = (page_directory_t*) 0xFFFFF000;
 	page_table_t* bitmap_pt = (page_table_t*) 0xFFC00000 + 769;
 	// something has gone wrong if this page table exists before this is called
@@ -101,23 +100,32 @@ bitmap* page_frame_map_init(void* physical_memory) {
 	// marking frame bitmap as used will be a little more complicated
 	// TODO: do this tomorrow or whenever I get back to this!	
 	bitmap* frame_bitmap = (bitmap*) 0xC0400000;
-	uint32_t frame_bytes = 0xC0400004;
 	frame_bitmap->bytes = (uint8_t*) 0xC0400004;
-	memset(frame_bitmap->bytes, 0, 0x20000);
+	memset(frame_bitmap->bytes, 0xFF, 0x20000);
+	while (physical_memory != NULL) {
+		//if not free
+		if (physical_memory->free == 0) {
+			for (uint32_t i = 0; i<physical_memory->length; i++) {
+				set_bitmap(frame_bitmap, i+physical_memory->start_frame, 0);
+			}
+		}
+		physical_memory = physical_memory->next;
+	}
 	
 	// mark page bitmap	
 	bitmap* page_bitmap = (bitmap*) 0xC0420004;
 	page_bitmap->bytes = (uint8_t*) 0xC0420008;
 	memset(page_bitmap->bytes, 0, 0x20000);
 	// all of first page and first 64 pages in second page are used
+	// (for now, all of the first page isn't really used so this is
+	// not exactly ideal)
 	for(int i = 0; i < 1088; i++) {
-		//set_bitmap(page_bitmap, 1, 1);
 		set_bitmap(page_bitmap, 0xC0000+i, 1);
 	}
 	// mark page directory as used
 	for(int i = 0; i < 1024; i++) {
-		//set_bitmap(page_bitmap, 0xFFC00+i, 1);
+		set_bitmap(page_bitmap, 0xFFC00+i, 1);
 	}
-	
+
 	return frame_bitmap;
 }
