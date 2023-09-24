@@ -81,8 +81,6 @@ void* get_physical_addr(void* virtual_addr) {
 
 // creates two bitmaps. both of 128KB size for simplicty. one for page frames and
 // one for pages. returns a pointer to the frame bitmap. add 128k+4 to get pages
-// NOTE: void* physical_memory will be a pointer to something like
-// memory_map_t* physical_memory once I get this working! don't forget that!
 bitmap* page_frame_map_init(frame_map_t* physical_memory) {
 	page_directory_t* pd = (page_directory_t*) 0xFFFFF000;
 	page_table_t* bitmap_pt = (page_table_t*) 0xFFC00000 + 769;
@@ -111,7 +109,17 @@ bitmap* page_frame_map_init(frame_map_t* physical_memory) {
 		}
 		physical_memory = physical_memory->next;
 	}
-	
+
+	// just mark all phsycial addresses 0x0 to 0xC00 as used.
+	// there's some wastage in it but it should be fine
+	// even in a 32 bit system. "temporary solution" or
+	// something like that
+	// this marks all of the memory we've used so far so that the
+	// allocator doesn't overwrite stuff.
+	for (int i = 0; i < 0xC00; i++) {
+		set_bitmap(frame_bitmap, i, 1);
+	}
+
 	// mark page bitmap	
 	bitmap* page_bitmap = (bitmap*) 0xC0420004;
 	page_bitmap->bytes = (uint8_t*) 0xC0420008;
