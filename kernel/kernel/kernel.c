@@ -7,6 +7,7 @@
 #include <kernel/page.h>
 #include <kernel/memory.h>
 #include <string.h>
+#include <kernel/gdt.h>
 
 #include "multiboot.h"
 
@@ -55,8 +56,9 @@ void kernel_main(uint32_t multiboot_loc, uint32_t grub_magic) {
 
 	bitmap* frame_bitmap = page_frame_map_init(frame_map);
 	bitmap* page_bitmap = (void*) frame_bitmap + 0x20004;
-	printf("%d\n", get_bitmap(frame_bitmap, 0xC00));
-	printf("%x\n", get_physical_addr(0xC0300000));
+	printf("%d\n", get_bitmap(frame_bitmap, 0xBFF));
+	printf("%x\n", get_physical_addr(0xC0100000));
+	x86_32_GDT_init();
 
 }
 
