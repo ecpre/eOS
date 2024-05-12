@@ -43,9 +43,6 @@ void x86_32_GDT_init() {
 	gdt_ring3_data->code = 0;
 	
 	GDT_descriptor gdt_desc = {sizeof(gdt)-1, gdt};
-	//gdt_desc.limit = sizeof(gdt)-1;
-	//gdt_desc.gdt_ptr = gdt;
 	
 	x86_32_GDT_load(&gdt_desc, 0x10, 0x08);
-	//x86_32_GDT_load();
 }
