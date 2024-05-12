@@ -8,6 +8,7 @@
 #include <kernel/memory.h>
 #include <string.h>
 #include <kernel/gdt.h>
+#include <kernel/idt.h>
 
 #include "multiboot.h"
 
@@ -21,6 +22,7 @@ extern frame_map_t _mmap_start;
 void multiboot(multiboot_info_t*, uint32_t, frame_map_t*);
 
 void kernel_main(uint32_t multiboot_loc, uint32_t grub_magic) {
+
 	terminal_init();
 	printf("eOS\n");
 	printf("printf tests: \n");
@@ -58,8 +60,9 @@ void kernel_main(uint32_t multiboot_loc, uint32_t grub_magic) {
 	bitmap* page_bitmap = (void*) frame_bitmap + 0x20004;
 	printf("%d\n", get_bitmap(frame_bitmap, 0xBFF));
 	printf("%x\n", get_physical_addr(0xC0100000));
+	// initialize GDT
 	x86_32_GDT_init();
-
+	x86_32_IDT_init();
 }
 
 void multiboot(multiboot_info_t* mbd, uint32_t grub_magic, frame_map_t* frame_map) {
