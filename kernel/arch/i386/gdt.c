@@ -3,19 +3,19 @@
 #include <string.h>
 #include <stdio.h>
 
-void __attribute__((cdecl)) x86_32_GDT_load(GDT_descriptor* descriptor, uint16_t code, uint16_t data);
+extern void __attribute__((cdecl)) x86_32_GDT_load(GDT_descriptor* descriptor, uint16_t code, uint16_t data);
 
 void x86_32_GDT_init() {
-	GDT_entry gdt[5];		// change to 5 for tss
+	GDT_entry gdt[5];		// change to 6 for tss
 	GDT_entry *gdt_null = &gdt[0];
 	GDT_entry *gdt_ring0_code = &gdt[1];
 	GDT_entry *gdt_ring0_data = &gdt[2];
 	GDT_entry *gdt_ring3_code = &gdt[3];
 	GDT_entry *gdt_ring3_data = &gdt[4];
-	//GDT_entry *gdt_tss = &gdt[5];
+	GDT_entry *gdt_tss = &gdt[5];
 
 	memset(gdt_null, 0, 8);
-	//memset(gdt_tss, 0, 8);
+	memset(gdt_tss, 0, 8);
 
 	gdt_ring0_code->limit_low = 0xFFFF;
 	gdt_ring0_code->base_low=0;
@@ -41,9 +41,11 @@ void x86_32_GDT_init() {
 	gdt_ring3_code->DPL=3;
 	gdt_ring3_data->DPL=3;
 	gdt_ring3_data->code = 0;
-
-	GDT_descriptor gdt_desc = {sizeof(gdt-1), gdt};
 	
-	printf("%x\n", gdt_ring3_code->DPL);
-	x86_32_GDT_load(&gdt_desc, 0x8, 0x10);
+	GDT_descriptor gdt_desc = {sizeof(gdt)-1, gdt};
+	//gdt_desc.limit = sizeof(gdt)-1;
+	//gdt_desc.gdt_ptr = gdt;
+	
+	x86_32_GDT_load(&gdt_desc, 0x10, 0x08);
+	//x86_32_GDT_load();
 }

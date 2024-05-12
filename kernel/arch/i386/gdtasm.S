@@ -1,34 +1,19 @@
 .global x86_32_GDT_load
 x86_32_GDT_load:
+	mov 4(%esp), %edx
+	mov 8(%esp), %eax
+	lgdt (%edx)
+	mov %eax, %ds
+	mov %eax, %es
+	mov %eax, %gs
+	mov %eax, %fs
+	mov %eax, %ss
 
-	
-	//movl %esp, %ebp
-	
-	ret
-/*	
-	//load gdt
-	movl +8(%ebp), %eax
-		
-	lgdt (%eax)
+	pushl 12(%esp)
+	push $.reload_cs
+	ljmp *(%esp)
 
-	movl +12(%ebp), %eax
-	pushl %eax
-	
-	call .reload_cs
-	retf
-
-/*
 .reload_cs:
-
-	mov +16(%ebp), %ax
-	mov %ax, %ds
-	mov %ax, %es
-	mov %ax, %fs
-	mov %ax, %gs
-	mov %ax, %ss
-
-	movl %ebp, %esp
-	popl %ebp
+	add $8, %esp
 	ret
-	
-*/
+
